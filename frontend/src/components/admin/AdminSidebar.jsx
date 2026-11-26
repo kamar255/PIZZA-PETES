@@ -8,6 +8,9 @@ import {
   LogOut,
   Store,
   X,
+  Ruler,
+  Wheat,
+  Cherry,
 } from "lucide-react";
 
 import { useAuth } from "../../hooks/useAuth";
@@ -28,6 +31,21 @@ function AdminSidebar({ isOpen = true, onClose }) {
       icon: Pizza,
     },
     {
+      label: "Gestion des tailles",
+      path: "/admin/sizes",
+      icon: Ruler,
+    },
+    {
+      label: "Gestion des pâtes",
+      path: "/admin/doughs",
+      icon: Wheat,
+    },
+    {
+      label: "Gestion des garnitures",
+      path: "/admin/toppings",
+      icon: Cherry,
+    },
+    {
       label: "Gestion des commandes",
       path: "/admin/orders",
       icon: ShoppingBag,
@@ -45,9 +63,7 @@ function AdminSidebar({ isOpen = true, onClose }) {
   };
 
   return (
-    <aside
-      className={`admin-sidebar ${isOpen ? "open" : "closed"}`}
-    >
+    <aside className={`admin-sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="admin-sidebar-header">
         <NavLink
           to="/admin/dashboard"

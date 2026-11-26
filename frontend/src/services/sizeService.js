@@ -2,9 +2,15 @@
 import api from "./api";
 
 const sizeService = {
-  // Récupérer toutes les tailles
+  // Récupérer toutes les tailles (administration)
   getAllSizes: async () => {
     const response = await api.get("/sizes");
+    return response.data;
+  },
+
+  // Récupérer uniquement les tailles disponibles (client)
+  getAvailableSizes: async () => {
+    const response = await api.get("/sizes/available");
     return response.data;
   },
 

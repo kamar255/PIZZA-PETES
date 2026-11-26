@@ -40,7 +40,7 @@ function CartSidebar({
     if (!isOpen) return;
 
     const handleEscape = (event) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !checkoutLoading) {
         onClose?.();
       }
     };
@@ -50,12 +50,16 @@ function CartSidebar({
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, checkoutLoading]);
 
   const handleCheckout = (event) => {
     event.preventDefault();
 
-    if (cart.length === 0 || checkoutLoading || !onCheckout) {
+    if (
+      cart.length === 0 ||
+      checkoutLoading ||
+      typeof onCheckout !== "function"
+    ) {
       return;
     }
 
@@ -64,8 +68,8 @@ function CartSidebar({
     }
 
     onCheckout({
-      totalPrice: Number(total.toFixed(2)),
-      deliveryAddress: deliveryAddress.trim(),
+      deliveryAddress:
+        orderType === "DELIVERY" ? deliveryAddress.trim() : "",
       orderType,
     });
   };
@@ -75,7 +79,9 @@ function CartSidebar({
       {isOpen && (
         <div
           className="cart-overlay"
-          onClick={onClose}
+          onClick={() => {
+            if (!checkoutLoading) onClose?.();
+          }}
           aria-hidden="true"
         />
       )}
@@ -98,6 +104,7 @@ function CartSidebar({
             className="cart-close"
             onClick={onClose}
             aria-label="Fermer le panier"
+            disabled={checkoutLoading}
           >
             <X size={24} />
           </button>
@@ -107,22 +114,15 @@ function CartSidebar({
           {cart.length === 0 ? (
             <div className="cart-empty">
               <ShoppingBag size={45} />
-
               <h3>Votre panier est vide</h3>
-
-              <p>
-                Ajoutez une pizza pour commencer !
-              </p>
+              <p>Ajoutez une pizza pour commencer !</p>
             </div>
           ) : (
             cart.map((item) => (
               <div className="cart-item" key={item.id}>
                 <div className="cart-item-image">
                   {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                    />
+                    <img src={item.imageUrl} alt={item.name} />
                   ) : (
                     <ShoppingBag size={25} />
                   )}
@@ -131,12 +131,25 @@ function CartSidebar({
                 <div className="cart-item-info">
                   <h3>{item.name}</h3>
 
-                  <p>
+                  {item.sizeName && (
+                    <p>Taille : {item.sizeName}</p>
+                  )}
+
+                  {item.doughName && (
+                    <p>Pâte : {item.doughName}</p>
+                  )}
+
+                  {item.toppingNames?.length > 0 && (
+                    <p>
+                      Garnitures : {item.toppingNames.join(", ")}
+                    </p>
+                  )}
+
+                  <p className="cart-item-price">
                     {(
                       Number(item.price || 0) *
                       Number(item.quantity || 0)
-                    ).toFixed(2)}{" "}
-                    DT
+                    ).toFixed(2)} DT
                   </p>
 
                   <div className="cart-quantity">
@@ -144,6 +157,7 @@ function CartSidebar({
                       type="button"
                       onClick={() => onDecrease?.(item.id)}
                       aria-label={`Diminuer la quantité de ${item.name}`}
+                      disabled={checkoutLoading}
                     >
                       <Minus size={15} />
                     </button>
@@ -154,6 +168,7 @@ function CartSidebar({
                       type="button"
                       onClick={() => onIncrease?.(item.id)}
                       aria-label={`Augmenter la quantité de ${item.name}`}
+                      disabled={checkoutLoading}
                     >
                       <Plus size={15} />
                     </button>
@@ -165,6 +180,7 @@ function CartSidebar({
                   className="cart-remove"
                   onClick={() => onRemove?.(item.id)}
                   aria-label={`Supprimer ${item.name}`}
+                  disabled={checkoutLoading}
                 >
                   <Trash2 size={17} />
                 </button>
@@ -231,13 +247,13 @@ function CartSidebar({
             disabled={
               cart.length === 0 ||
               checkoutLoading ||
-              !onCheckout ||
+              typeof onCheckout !== "function" ||
               (orderType === "DELIVERY" && !deliveryAddress.trim())
             }
           >
             {checkoutLoading
               ? "Commande en cours..."
-              : "Commander maintenant"}
+              : "Passer la commande"}
           </button>
         </form>
       </aside>

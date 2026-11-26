@@ -15,12 +15,19 @@ function LoginForm({
   return (
     <div className="auth-card">
       <div className="auth-heading">
-        <LogIn size={35} />
+        <div className="auth-icon">
+          <LogIn size={30} />
+        </div>
 
-        <h1>Bienvenue chez Pizza Pete's</h1>
+        <span className="auth-eyebrow">
+          BIENVENUE CHEZ PIZZA PETE'S
+        </span>
+
+        <h1>Heureux de vous revoir !</h1>
 
         <p>
-          Connectez-vous pour commander vos pizzas préférées.
+          Connectez-vous pour commander vos pizzas préférées
+          et retrouver vos saveurs favorites.
         </p>
       </div>
 
@@ -64,12 +71,12 @@ function LoginForm({
       </form>
 
       <p className="auth-footer">
-        Vous n'avez pas de compte ?{" "}
+        Vous n'avez pas encore de compte ?{" "}
         <Link to="/register">Créer un compte</Link>
       </p>
 
       <Link to="/" className="auth-back">
-        Retour à l'accueil
+        ← Retour à l'accueil
       </Link>
     </div>
   );

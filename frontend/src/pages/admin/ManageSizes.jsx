@@ -1,48 +1,81 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Plus,
   Pencil,
   Trash2,
   X,
+  Ruler,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 import sizeService from "../../services/sizeService";
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminNavbar from "../../components/admin/AdminNavbar";
+import Loader from "../../components/common/Loader";
+
+const INITIAL_FORM = {
+  name: "",
+  description: "",
+  extraPrice: "0",
+  available: true,
+};
 
 function ManageSizes() {
   const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSize, setEditingSize] = useState(null);
+  const [formData, setFormData] = useState({ ...INITIAL_FORM });
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const initialForm = {
-    name: "",
-    description: "",
-    extraPrice: "0",
-    available: true,
-  };
+  const fetchSizes = useCallback(async () => {
+    try {
+      setError("");
 
-  const [formData, setFormData] = useState(initialForm);
+      const response = await sizeService.getAllSizes();
+      const data = Array.isArray(response)
+        ? response
+        : response?.data || [];
+
+      setSizes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Erreur chargement tailles :", err);
+
+      setError(
+        err.response?.data?.message ||
+          "Impossible de charger les tailles."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadSizes() {
+    const loadSizes = async () => {
       try {
-        const data = await sizeService.getAllSizes();
+        const response = await sizeService.getAllSizes();
+        const data = Array.isArray(response)
+          ? response
+          : response?.data || [];
 
         if (isMounted) {
           setSizes(Array.isArray(data) ? data : []);
           setError("");
         }
       } catch (err) {
+        console.error("Erreur chargement tailles :", err);
+
         if (isMounted) {
           setError(
             err.response?.data?.message ||
-            "Impossible de charger les tailles."
+              "Impossible de charger les tailles."
           );
         }
       } finally {
@@ -50,7 +83,7 @@ function ManageSizes() {
           setLoading(false);
         }
       }
-    }
+    };
 
     loadSizes();
 
@@ -58,6 +91,38 @@ function ManageSizes() {
       isMounted = false;
     };
   }, []);
+
+  const openAddModal = () => {
+    setEditingSize(null);
+    setFormData({ ...INITIAL_FORM });
+    setError("");
+    setSuccess("");
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (size) => {
+    setEditingSize(size);
+
+    setFormData({
+      name: size.name || "",
+      description: size.description || "",
+      extraPrice: String(size.extraPrice ?? size.price ?? 0),
+      available: size.available ?? true,
+    });
+
+    setError("");
+    setSuccess("");
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+
+    setIsModalOpen(false);
+    setEditingSize(null);
+    setFormData({ ...INITIAL_FORM });
+    setError("");
+  };
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -68,321 +133,872 @@ function ManageSizes() {
     }));
   };
 
-  const resetForm = () => {
-    setFormData(initialForm);
-    setEditingId(null);
-    setShowForm(false);
-  };
-
-  const handleAdd = () => {
-    setMessage("");
-    setError("");
-    setFormData(initialForm);
-    setEditingId(null);
-    setShowForm(true);
-  };
-
-  const handleEdit = (size) => {
-    setMessage("");
-    setError("");
-    setEditingId(size.id);
-    setFormData({
-      name: size.name || "",
-      description: size.description || "",
-      extraPrice: String(size.extraPrice ?? size.price ?? 0),
-      available: size.available ?? true,
-    });
-    setShowForm(true);
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setMessage("");
-    setError("");
-
-    const name = formData.name.trim();
-    const extraPrice = Number(formData.extraPrice);
-
-    if (!name) {
+    if (!formData.name.trim()) {
       setError("Le nom de la taille est obligatoire.");
       return;
     }
 
-    if (
-      formData.extraPrice === "" ||
-      !Number.isFinite(extraPrice) ||
-      extraPrice < 0
-    ) {
-      setError("Le prix supplémentaire doit être un nombre positif.");
+    if (formData.extraPrice === "") {
+      setError("Veuillez saisir un supplément valide.");
       return;
     }
 
-    const payload = {
-      name,
+    const extraPrice = Number(formData.extraPrice);
+
+    if (!Number.isFinite(extraPrice) || extraPrice < 0) {
+      setError("Veuillez saisir un supplément valide.");
+      return;
+    }
+
+    const sizeData = {
+      name: formData.name.trim(),
       description: formData.description.trim(),
       extraPrice,
       available: formData.available,
     };
 
     try {
-      setSaving(true);
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
 
-      if (editingId !== null) {
-        await sizeService.updateSize(editingId, payload);
-        setMessage("Taille modifiée avec succès.");
+      if (editingSize) {
+        await sizeService.updateSize(editingSize.id, sizeData);
+        setSuccess("Taille modifiée avec succès.");
       } else {
-        await sizeService.createSize(payload);
-        setMessage("Taille ajoutée avec succès.");
+        await sizeService.createSize(sizeData);
+        setSuccess("Taille ajoutée avec succès.");
       }
 
-      const updatedSizes = await sizeService.getAllSizes();
-      setSizes(Array.isArray(updatedSizes) ? updatedSizes : []);
+      setIsModalOpen(false);
+      setEditingSize(null);
+      setFormData({ ...INITIAL_FORM });
 
-      resetForm();
+      await fetchSizes();
     } catch (err) {
+      console.error("Erreur sauvegarde taille :", err);
+
       setError(
         err.response?.data?.message ||
-        "Une erreur est survenue pendant l'enregistrement."
+          "Une erreur est survenue lors de l'enregistrement."
       );
     } finally {
-      setSaving(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (size) => {
     const confirmed = window.confirm(
-      "Voulez-vous vraiment supprimer cette taille ?"
+      `Voulez-vous vraiment supprimer la taille "${size.name}" ?`
     );
 
     if (!confirmed) return;
 
-    setMessage("");
-    setError("");
-
     try {
-      await sizeService.deleteSize(id);
+      setDeletingId(size.id);
+      setError("");
+      setSuccess("");
 
-      setSizes((previous) =>
-        previous.filter((size) => size.id !== id)
-      );
+      await sizeService.deleteSize(size.id);
 
-      setMessage("Taille supprimée avec succès.");
+      setSuccess("Taille supprimée avec succès.");
+      await fetchSizes();
     } catch (err) {
+      console.error("Erreur suppression taille :", err);
+
       setError(
         err.response?.data?.message ||
-        "Impossible de supprimer cette taille."
+          "Impossible de supprimer cette taille."
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
+  const availableCount = sizes.filter(
+    (size) => size.available
+  ).length;
+
+  const unavailableCount = sizes.length - availableCount;
+
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
-    <div className="admin-page manage-sizes">
-      <div className="admin-page-header">
-        <div>
-          <h1>Gestion des tailles</h1>
-          <p>Gérez les tailles disponibles pour vos pizzas.</p>
-        </div>
+    <div className="admin-layout">
+      <AdminSidebar />
 
-        <button
-          type="button"
-          className="admin-primary-button"
-          onClick={handleAdd}
-        >
-          <Plus size={18} />
-          Ajouter une taille
-        </button>
-      </div>
+      <div className="admin-main">
+        <AdminNavbar />
 
-      {message && (
-        <div className="admin-success-message">
-          {message}
-        </div>
-      )}
+        <main className="admin-content">
+          <style>{`
+            .sizes-page {
+              color: #302923;
+            }
 
-      {error && (
-        <div className="admin-error-message">
-          {error}
-        </div>
-      )}
+            .sizes-heading {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 18px;
+              margin-bottom: 28px;
+            }
 
-      {showForm && (
-        <div className="admin-form-card">
-          <div className="admin-form-header">
-            <h2>
-              {editingId !== null
-                ? "Modifier la taille"
-                : "Ajouter une taille"}
-            </h2>
+            .sizes-heading h1 {
+              margin: 0 0 7px;
+              color: #302923;
+              font-size: 26px;
+            }
 
-            <button
-              type="button"
-              className="admin-close-button"
-              onClick={resetForm}
-              disabled={saving}
-              aria-label="Fermer le formulaire"
-            >
-              <X size={20} />
-            </button>
-          </div>
+            .sizes-heading p {
+              margin: 0;
+              color: #918579;
+              font-size: 11px;
+            }
 
-          <form onSubmit={handleSubmit}>
-            <div className="admin-form-group">
-              <label htmlFor="size-name">Nom de la taille</label>
-              <input
-                id="size-name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Exemple : Petite, Moyenne, Grande"
-                required
-              />
-            </div>
+            .sizes-add-button {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 9px;
+              padding: 11px 17px;
+              border: 1px solid #ad8248;
+              border-radius: 5px;
+              background: #ad8248;
+              color: #fff;
+              font-size: 10px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: .2s;
+            }
 
-            <div className="admin-form-group">
-              <label htmlFor="size-description">Description</label>
-              <textarea
-                id="size-description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Description de la taille"
-                rows={3}
-              />
-            </div>
+            .sizes-add-button:hover {
+              background: #956c37;
+            }
 
-            <div className="admin-form-group">
-              <label htmlFor="size-price">
-                Prix supplémentaire
-              </label>
-              <input
-                id="size-price"
-                type="number"
-                name="extraPrice"
-                value={formData.extraPrice}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
+            .sizes-summary {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              margin-bottom: 28px;
+              padding: 18px 0;
+              border-top: 1px solid #e5dacb;
+              border-bottom: 1px solid #e5dacb;
+            }
 
-            <div className="admin-form-checkbox">
-              <input
-                id="size-available"
-                type="checkbox"
-                name="available"
-                checked={formData.available}
-                onChange={handleChange}
-              />
-              <label htmlFor="size-available">
-                Taille disponible
-              </label>
-            </div>
+            .sizes-summary-item {
+              display: flex;
+              align-items: center;
+              gap: 13px;
+              padding: 3px 22px;
+              border-right: 1px solid #e5dacb;
+            }
 
-            <div className="admin-form-actions">
+            .sizes-summary-item:first-child {
+              padding-left: 5px;
+            }
+
+            .sizes-summary-item:last-child {
+              border-right: none;
+            }
+
+            .sizes-summary-icon {
+              color: #ad8248;
+            }
+
+            .sizes-summary-item span {
+              display: block;
+              margin-bottom: 5px;
+              color: #968a7d;
+              font-size: 10px;
+            }
+
+            .sizes-summary-item strong {
+              color: #302923;
+              font-size: 21px;
+            }
+
+            .sizes-alert {
+              margin-bottom: 18px;
+              padding: 12px 15px;
+              border-left: 3px solid;
+              font-size: 11px;
+            }
+
+            .sizes-alert.error {
+              border-color: #bd5148;
+              background: #f8e9e6;
+              color: #a53f38;
+            }
+
+            .sizes-alert.success {
+              border-color: #64865a;
+              background: #e9f0e5;
+              color: #527b4d;
+            }
+
+            .sizes-list-heading {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 15px;
+              padding: 18px 4px;
+              border-top: 1px solid #e5dacb;
+            }
+
+            .sizes-list-heading h2 {
+              margin: 0 0 5px;
+              color: #302923;
+              font-size: 17px;
+            }
+
+            .sizes-list-heading p {
+              margin: 0;
+              color: #968a7d;
+              font-size: 10px;
+            }
+
+            .sizes-count {
+              color: #a47b42;
+              font-size: 10px;
+              font-weight: 700;
+            }
+
+            .sizes-table-wrap {
+              overflow-x: auto;
+              border-top: 1px solid #e5dacb;
+              border-bottom: 1px solid #e5dacb;
+            }
+
+            .sizes-table {
+              width: 100%;
+              min-width: 650px;
+              border-collapse: collapse;
+              text-align: left;
+            }
+
+            .sizes-table thead {
+              background: #eee7db;
+            }
+
+            .sizes-table th {
+              padding: 14px 15px;
+              color: #827466;
+              font-size: 9px;
+              font-weight: 700;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+            }
+
+            .sizes-table td {
+              padding: 15px;
+              border-bottom: 1px solid #eae2d7;
+              color: #665c51;
+              font-size: 11px;
+            }
+
+            .sizes-table tbody tr {
+              background: rgba(255,255,255,.15);
+              transition: background .2s;
+            }
+
+            .sizes-table tbody tr:nth-child(even) {
+              background: rgba(237,230,219,.35);
+            }
+
+            .sizes-table tbody tr:hover {
+              background: #eee6d9;
+            }
+
+            .size-name-cell {
+              display: flex;
+              align-items: center;
+              gap: 11px;
+            }
+
+            .size-icon {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 35px;
+              height: 35px;
+              flex-shrink: 0;
+              border: 1px solid #e5d8c5;
+              border-radius: 50%;
+              background: #f3ece1;
+              color: #ad8248;
+            }
+
+            .size-name-cell strong {
+              color: #40372e;
+              font-size: 11px;
+            }
+
+            .size-description {
+              max-width: 260px;
+              color: #918579;
+              line-height: 1.5;
+            }
+
+            .size-price {
+              color: #a47b42;
+              font-size: 12px;
+              font-weight: 700;
+              white-space: nowrap;
+            }
+
+            .size-availability {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 6px 9px;
+              border-radius: 4px;
+              font-size: 9px;
+              font-weight: 700;
+              white-space: nowrap;
+            }
+
+            .size-availability.available {
+              background: #e4eee3;
+              color: #527b4d;
+            }
+
+            .size-availability.unavailable {
+              background: #f7e4e2;
+              color: #b84c45;
+            }
+
+            .sizes-actions {
+              display: flex;
+              align-items: center;
+              gap: 7px;
+            }
+
+            .sizes-action {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 31px;
+              height: 31px;
+              border: 1px solid #dfd4c4;
+              border-radius: 5px;
+              background: transparent;
+              color: #827466;
+              cursor: pointer;
+              transition: .2s;
+            }
+
+            .sizes-action.edit:hover {
+              border-color: #bd9250;
+              background: #f5eee3;
+              color: #a47b42;
+            }
+
+            .sizes-action.delete:hover {
+              border-color: #d8aaa3;
+              background: #f8e9e6;
+              color: #bd5148;
+            }
+
+            .sizes-action:disabled {
+              opacity: .5;
+              cursor: not-allowed;
+            }
+
+            .sizes-empty {
+              padding: 50px 20px;
+              color: #968a7d;
+              text-align: center;
+            }
+
+            .sizes-empty svg {
+              margin-bottom: 10px;
+              color: #ad8248;
+            }
+
+            .sizes-empty h3 {
+              margin: 0 0 7px;
+              color: #51463b;
+              font-size: 13px;
+            }
+
+            .sizes-empty p {
+              margin: 0;
+              font-size: 10px;
+            }
+
+            .sizes-modal-overlay {
+              position: fixed;
+              inset: 0;
+              z-index: 300;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 20px;
+              overflow-y: auto;
+              background: rgba(37,31,25,.55);
+              backdrop-filter: blur(4px);
+            }
+
+            .sizes-modal {
+              width: 100%;
+              max-width: 490px;
+              padding: 27px;
+              border: 1px solid #e6dac8;
+              background: #f8f5ef;
+              box-shadow: 0 20px 60px rgba(30,24,18,.2);
+            }
+
+            .sizes-modal-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 15px;
+              padding-bottom: 18px;
+              margin-bottom: 20px;
+              border-bottom: 1px solid #e3d8c8;
+            }
+
+            .sizes-modal-header small {
+              color: #ae854b;
+              font-size: 9px;
+              font-weight: 700;
+              letter-spacing: 2px;
+            }
+
+            .sizes-modal-header h2 {
+              margin: 6px 0 0;
+              color: #302923;
+              font-size: 20px;
+            }
+
+            .sizes-close {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 33px;
+              height: 33px;
+              border: 1px solid #dfd4c4;
+              background: transparent;
+              color: #665747;
+              cursor: pointer;
+            }
+
+            .sizes-close:hover {
+              border-color: #c64a37;
+              color: #c64a37;
+            }
+
+            .sizes-form {
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+            }
+
+            .sizes-field {
+              display: flex;
+              flex-direction: column;
+              gap: 7px;
+            }
+
+            .sizes-field label {
+              color: #675a4c;
+              font-size: 10px;
+              font-weight: 700;
+            }
+
+            .sizes-field input,
+            .sizes-field textarea {
+              width: 100%;
+              box-sizing: border-box;
+              padding: 11px 12px;
+              border: 1px solid #e0d5c5;
+              border-radius: 4px;
+              outline: none;
+              background: #fffdf9;
+              color: #40372e;
+              font-family: inherit;
+              font-size: 11px;
+              transition: border-color .2s;
+            }
+
+            .sizes-field input:focus,
+            .sizes-field textarea:focus {
+              border-color: #b38a50;
+            }
+
+            .sizes-field textarea {
+              min-height: 85px;
+              resize: vertical;
+            }
+
+            .sizes-availability-control {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              padding: 12px 0;
+              border-top: 1px solid #e3d8c8;
+              border-bottom: 1px solid #e3d8c8;
+              color: #675a4c;
+              font-size: 10px;
+            }
+
+            .sizes-availability-control input {
+              width: 16px;
+              height: 16px;
+              accent-color: #ad8248;
+              cursor: pointer;
+            }
+
+            .sizes-modal-actions {
+              display: flex;
+              justify-content: flex-end;
+              gap: 9px;
+              padding-top: 5px;
+            }
+
+            .sizes-modal-button {
+              padding: 10px 19px;
+              border: 1px solid #dfd4c4;
+              background: transparent;
+              color: #675a4c;
+              font-size: 10px;
+              cursor: pointer;
+            }
+
+            .sizes-modal-button.primary {
+              border-color: #ad8248;
+              background: #ad8248;
+              color: white;
+              font-weight: 700;
+            }
+
+            .sizes-modal-button.primary:hover {
+              border-color: #956c37;
+              background: #956c37;
+            }
+
+            .sizes-modal-button:disabled {
+              opacity: .6;
+              cursor: not-allowed;
+            }
+
+            @media (max-width: 700px) {
+              .sizes-heading {
+                align-items: flex-start;
+                flex-direction: column;
+              }
+
+              .sizes-summary {
+                grid-template-columns: 1fr;
+                gap: 15px;
+              }
+
+              .sizes-summary-item {
+                padding: 4px 5px;
+                border-right: none;
+              }
+
+              .sizes-modal {
+                padding: 20px;
+              }
+            }
+          `}</style>
+
+          <div className="sizes-page">
+            <div className="sizes-heading">
+              <div>
+                <h1>Gestion des tailles</h1>
+                <p>
+                  Gérez les formats de pizzas et leurs suppléments.
+                </p>
+              </div>
+
               <button
                 type="button"
-                className="admin-secondary-button"
-                onClick={resetForm}
-                disabled={saving}
+                className="sizes-add-button"
+                onClick={openAddModal}
               >
-                Annuler
-              </button>
-
-              <button
-                type="submit"
-                className="admin-primary-button"
-                disabled={saving}
-              >
-                {saving
-                  ? "Enregistrement..."
-                  : editingId !== null
-                    ? "Enregistrer les modifications"
-                    : "Ajouter"}
+                <Plus size={17} />
+                Ajouter une taille
               </button>
             </div>
-          </form>
+
+            {error && (
+              <div className="sizes-alert error" role="alert">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="sizes-alert success" role="status">
+                {success}
+              </div>
+            )}
+
+            <section className="sizes-summary">
+              <div className="sizes-summary-item">
+                <Ruler className="sizes-summary-icon" size={23} />
+                <div>
+                  <span>Total des tailles</span>
+                  <strong>{sizes.length}</strong>
+                </div>
+              </div>
+
+              <div className="sizes-summary-item">
+                <CheckCircle className="sizes-summary-icon" size={23} />
+                <div>
+                  <span>Tailles disponibles</span>
+                  <strong>{availableCount}</strong>
+                </div>
+              </div>
+
+              <div className="sizes-summary-item">
+                <XCircle className="sizes-summary-icon" size={23} />
+                <div>
+                  <span>Tailles indisponibles</span>
+                  <strong>{unavailableCount}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <div className="sizes-list-heading">
+                <div>
+                  <h2>Liste des tailles</h2>
+                  <p>
+                    Consultez et gérez les formats proposés aux clients.
+                  </p>
+                </div>
+
+                <span className="sizes-count">
+                  {sizes.length} élément(s)
+                </span>
+              </div>
+
+              {sizes.length === 0 ? (
+                <div className="sizes-empty">
+                  <Ruler size={35} />
+                  <h3>Aucune taille disponible</h3>
+                  <p>
+                    Ajoutez votre premier format de pizza pour commencer.
+                  </p>
+                </div>
+              ) : (
+                <div className="sizes-table-wrap">
+                  <table className="sizes-table">
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Description</th>
+                        <th>Supplément</th>
+                        <th>Disponibilité</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {sizes.map((size) => (
+                        <tr key={size.id}>
+                          <td>
+                            <div className="size-name-cell">
+                              <div className="size-icon">
+                                <Ruler size={17} />
+                              </div>
+                              <strong>{size.name}</strong>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span className="size-description">
+                              {size.description || "Aucune description"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span className="size-price">
+                              {Number(
+                                size.extraPrice ?? size.price ?? 0
+                              ).toFixed(2)}{" "}
+                              DT
+                            </span>
+                          </td>
+
+                          <td>
+                            <span
+                              className={`size-availability ${
+                                size.available
+                                  ? "available"
+                                  : "unavailable"
+                              }`}
+                            >
+                              {size.available ? (
+                                <CheckCircle size={12} />
+                              ) : (
+                                <XCircle size={12} />
+                              )}
+
+                              {size.available
+                                ? "Disponible"
+                                : "Indisponible"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <div className="sizes-actions">
+                              <button
+                                type="button"
+                                className="sizes-action edit"
+                                onClick={() => openEditModal(size)}
+                                title="Modifier"
+                                aria-label={`Modifier ${size.name}`}
+                              >
+                                <Pencil size={15} />
+                              </button>
+
+                              <button
+                                type="button"
+                                className="sizes-action delete"
+                                onClick={() => handleDelete(size)}
+                                disabled={deletingId === size.id}
+                                title="Supprimer"
+                                aria-label={`Supprimer ${size.name}`}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+        </main>
+      </div>
+
+      {isModalOpen && (
+        <div
+          className="sizes-modal-overlay"
+          onClick={closeModal}
+        >
+          <div
+            className="sizes-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sizes-modal-title"
+          >
+            <div className="sizes-modal-header">
+              <div>
+                <small>PIZZA PETE'S ADMINISTRATION</small>
+                <h2 id="sizes-modal-title">
+                  {editingSize
+                    ? "Modifier la taille"
+                    : "Nouvelle taille"}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="sizes-close"
+                onClick={closeModal}
+                disabled={submitting}
+                aria-label="Fermer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form className="sizes-form" onSubmit={handleSubmit}>
+              <div className="sizes-field">
+                <label htmlFor="size-name">Nom de la taille</label>
+                <input
+                  id="size-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Ex : Petite, Moyenne, Grande"
+                  required
+                />
+              </div>
+
+              <div className="sizes-field">
+                <label htmlFor="size-description">Description</label>
+                <textarea
+                  id="size-description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Description de la taille..."
+                />
+              </div>
+
+              <div className="sizes-field">
+                <label htmlFor="size-extra-price">
+                  Supplément de prix (DT)
+                </label>
+                <input
+                  id="size-extra-price"
+                  name="extraPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.extraPrice}
+                  onChange={handleChange}
+                  placeholder="Ex : 3.00"
+                  required
+                />
+              </div>
+
+              <label className="sizes-availability-control">
+                <input
+                  type="checkbox"
+                  name="available"
+                  checked={formData.available}
+                  onChange={handleChange}
+                />
+                Taille disponible pour les clients
+              </label>
+
+              {error && (
+                <div className="sizes-alert error" role="alert">
+                  {error}
+                </div>
+              )}
+
+              <div className="sizes-modal-actions">
+                <button
+                  type="button"
+                  className="sizes-modal-button"
+                  onClick={closeModal}
+                  disabled={submitting}
+                >
+                  Annuler
+                </button>
+
+                <button
+                  type="submit"
+                  className="sizes-modal-button primary"
+                  disabled={submitting}
+                >
+                  {submitting
+                    ? "Enregistrement..."
+                    : editingSize
+                      ? "Enregistrer les modifications"
+                      : "Ajouter la taille"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-
-      <div className="admin-table-card">
-        <div className="admin-table-header">
-          <h2>Liste des tailles</h2>
-          <span>{sizes.length} taille(s)</span>
-        </div>
-
-        {loading ? (
-          <p className="admin-loading">Chargement des tailles...</p>
-        ) : sizes.length === 0 ? (
-          <p className="admin-empty">
-            Aucune taille enregistrée.
-          </p>
-        ) : (
-          <div className="admin-table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Description</th>
-                  <th>Prix supplémentaire</th>
-                  <th>Disponibilité</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {sizes.map((size) => (
-                  <tr key={size.id}>
-                    <td>{size.name}</td>
-                    <td>{size.description || "—"}</td>
-                    <td>
-                      {Number(
-                        size.extraPrice ?? size.price ?? 0
-                      ).toFixed(2)}
-                    </td>
-                    <td>
-                      <span
-                        className={
-                          size.available
-                            ? "admin-status available"
-                            : "admin-status unavailable"
-                        }
-                      >
-                        {size.available
-                          ? "Disponible"
-                          : "Indisponible"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="admin-table-actions">
-                        <button
-                          type="button"
-                          className="admin-edit-button"
-                          onClick={() => handleEdit(size)}
-                          aria-label={`Modifier ${size.name}`}
-                        >
-                          <Pencil size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="admin-delete-button"
-                          onClick={() => handleDelete(size.id)}
-                          aria-label={`Supprimer ${size.name}`}
-                        >
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -62,13 +62,36 @@ function Login() {
 
   return (
     <main className="auth-page">
-      <LoginForm
-        formData={formData}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-        error={error}
-        loading={loading}
-      />
+      {/* Panneau visuel avec photo Internet */}
+      <section className="auth-visual">
+        <div className="auth-logo">
+          Pizza Pete's
+        </div>
+
+        <div className="auth-visual-content">
+          <h1>
+            Le goût de l'Italie,
+            <br />
+            chez vous.
+          </h1>
+
+          <p>
+            Découvrez nos pizzas artisanales, préparées avec
+            passion et des ingrédients soigneusement sélectionnés.
+          </p>
+        </div>
+      </section>
+
+      {/* Formulaire de connexion */}
+      <section className="auth-form-container">
+        <LoginForm
+          formData={formData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          error={error}
+          loading={loading}
+        />
+      </section>
     </main>
   );
 }

@@ -15,33 +15,44 @@ function RegisterForm({
   return (
     <div className="auth-card">
       <div className="auth-heading">
-        <UserPlus size={35} />
-        <h1>Rejoignez Pizza Pete's</h1>
+        <div className="auth-icon">
+          <UserPlus size={30} />
+        </div>
+
+        <span className="auth-eyebrow">
+          BIENVENUE CHEZ PIZZA PETE'S
+        </span>
+
+        <h1>Créer votre compte</h1>
+
         <p>
-          Créez votre compte pour profiter de nos délicieuses pizzas.
+          Rejoignez notre univers gourmand et découvrez
+          nos pizzas artisanales.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <Input
-          label="Prénom"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          placeholder="Votre prénom"
-          required
-          disabled={loading}
-        />
+        <div className="auth-register-grid">
+          <Input
+            label="Prénom"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            placeholder="Votre prénom"
+            required
+            disabled={loading}
+          />
 
-        <Input
-          label="Nom"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          placeholder="Votre nom"
-          required
-          disabled={loading}
-        />
+          <Input
+            label="Nom"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Votre nom"
+            required
+            disabled={loading}
+          />
+        </div>
 
         <Input
           label="Adresse e-mail"
@@ -109,7 +120,7 @@ function RegisterForm({
       </p>
 
       <Link to="/" className="auth-back">
-        Retour à l'accueil
+        ← Retour à l'accueil
       </Link>
     </div>
   );

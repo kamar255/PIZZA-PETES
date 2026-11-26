@@ -15,6 +15,9 @@ import Register from "../pages/auth/Register";
 // Pages administrateur
 import Dashboard from "../pages/admin/Dashboard";
 import ManagePizzas from "../pages/admin/ManagePizzas";
+import ManageSizes from "../pages/admin/ManageSizes";
+import ManageDoughs from "../pages/admin/ManageDoughs";
+import ManageToppings from "../pages/admin/ManageToppings";
 import ManageOrders from "../pages/admin/ManageOrders";
 import ManageUsers from "../pages/admin/ManageUsers";
 
@@ -24,32 +27,20 @@ import ProtectedRoute from "../components/common/ProtectedRoute";
 function AppRoutes() {
   return (
     <Routes>
-
-      {/* ========================= */}
-      {/*       PAGES PUBLIQUES     */}
-      {/* ========================= */}
-
+      {/* PAGES PUBLIQUES */}
       <Route path="/" element={<Home />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-
-      {/* ========================= */}
-      {/*       ESPACE CLIENT       */}
-      {/* ========================= */}
-
+      {/* ESPACE CLIENT */}
       <Route element={<ProtectedRoute allowedRoles={["CLIENT"]} />}>
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
         <Route path="/orders" element={<Orders />} />
       </Route>
 
-
-      {/* ========================= */}
-      {/*   ESPACE ADMINISTRATEUR   */}
-      {/* ========================= */}
-
+      {/* ESPACE ADMINISTRATEUR */}
       <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
         <Route
           path="/admin/dashboard"
@@ -62,6 +53,21 @@ function AppRoutes() {
         />
 
         <Route
+          path="/admin/sizes"
+          element={<ManageSizes />}
+        />
+
+        <Route
+          path="/admin/doughs"
+          element={<ManageDoughs />}
+        />
+
+        <Route
+          path="/admin/toppings"
+          element={<ManageToppings />}
+        />
+
+        <Route
           path="/admin/orders"
           element={<ManageOrders />}
         />
@@ -71,7 +77,6 @@ function AppRoutes() {
           element={<ManageUsers />}
         />
       </Route>
-
     </Routes>
   );
 }

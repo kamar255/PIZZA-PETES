@@ -1,9 +1,16 @@
+
 import api from "./api";
 
 const doughService = {
-  // Récupérer toutes les pâtes
+  // Récupérer toutes les pâtes (administration)
   getAllDoughs: async () => {
     const response = await api.get("/doughs");
+    return response.data;
+  },
+
+  // Récupérer uniquement les pâtes disponibles (client)
+  getAvailableDoughs: async () => {
+    const response = await api.get("/doughs/available");
     return response.data;
   },
 

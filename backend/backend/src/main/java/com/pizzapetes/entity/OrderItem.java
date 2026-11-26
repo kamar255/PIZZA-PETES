@@ -2,7 +2,10 @@
 package com.pizzapetes.entity;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "order_items")
@@ -37,10 +40,26 @@ public class OrderItem {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
 
+    @OneToMany(
+            mappedBy = "orderItem",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<OrderItemTopping> toppings = new ArrayList<>();
+
     public OrderItem() {
     }
 
-    // Getters et Setters
+    public void addTopping(OrderItemTopping itemTopping) {
+        toppings.add(itemTopping);
+        itemTopping.setOrderItem(this);
+    }
+
+    public void removeTopping(OrderItemTopping itemTopping) {
+        toppings.remove(itemTopping);
+        itemTopping.setOrderItem(null);
+    }
+
     public Long getId() {
         return id;
     }
@@ -103,5 +122,19 @@ public class OrderItem {
 
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
+    }
+
+    public List<OrderItemTopping> getToppings() {
+        return toppings;
+    }
+
+    public void setToppings(List<OrderItemTopping> toppings) {
+        this.toppings.clear();
+
+        if (toppings != null) {
+            for (OrderItemTopping topping : toppings) {
+                addTopping(topping);
+            }
+        }
     }
 }

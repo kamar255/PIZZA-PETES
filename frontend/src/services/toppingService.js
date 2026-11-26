@@ -2,31 +2,37 @@
 import api from "./api";
 
 const toppingService = {
-  // Récupérer tous les suppléments
+  // Récupérer toutes les garnitures (administration)
   getAllToppings: async () => {
     const response = await api.get("/toppings");
     return response.data;
   },
 
-  // Récupérer un supplément par son ID
+  // Récupérer uniquement les garnitures disponibles (client)
+  getAvailableToppings: async () => {
+    const response = await api.get("/toppings/available");
+    return response.data;
+  },
+
+  // Récupérer une garniture par son ID
   getToppingById: async (id) => {
     const response = await api.get(`/toppings/${id}`);
     return response.data;
   },
 
-  // Ajouter un supplément
+  // Ajouter une garniture
   createTopping: async (toppingData) => {
     const response = await api.post("/toppings", toppingData);
     return response.data;
   },
 
-  // Modifier un supplément
+  // Modifier une garniture
   updateTopping: async (id, toppingData) => {
     const response = await api.put(`/toppings/${id}`, toppingData);
     return response.data;
   },
 
-  // Supprimer un supplément
+  // Supprimer une garniture
   deleteTopping: async (id) => {
     const response = await api.delete(`/toppings/${id}`);
     return response.data;

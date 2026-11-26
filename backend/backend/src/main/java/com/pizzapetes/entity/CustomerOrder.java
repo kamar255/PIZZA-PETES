@@ -3,8 +3,11 @@ package com.pizzapetes.entity;
 
 import com.pizzapetes.enums.OrderStatus;
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customer_orders")
@@ -32,11 +35,16 @@ public class CustomerOrder {
 
     private String orderType;
 
-    // Constructeur vide
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<OrderItem> items = new ArrayList<>();
+
     public CustomerOrder() {
     }
 
-    // Initialisation de la date
     @PrePersist
     protected void onCreate() {
         orderDate = LocalDateTime.now();
@@ -46,7 +54,16 @@ public class CustomerOrder {
         }
     }
 
-    // Getters et Setters
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+    }
+
     public Long getId() {
         return id;
     }
@@ -101,5 +118,19 @@ public class CustomerOrder {
 
     public void setOrderType(String orderType) {
         this.orderType = orderType;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items.clear();
+
+        if (items != null) {
+            for (OrderItem item : items) {
+                addItem(item);
+            }
+        }
     }
 }

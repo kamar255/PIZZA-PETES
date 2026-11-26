@@ -2,8 +2,11 @@
 package com.pizzapetes.dto;
 
 import com.pizzapetes.enums.OrderStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrderDTO {
 
@@ -14,6 +17,7 @@ public class OrderDTO {
     private LocalDateTime orderDate;
     private String deliveryAddress;
     private String orderType;
+    private List<OrderItemDTO> items = new ArrayList<>();
 
     public OrderDTO() {
     }
@@ -90,5 +94,13 @@ public class OrderDTO {
 
     public void setOrderType(String orderType) {
         this.orderType = orderType;
+    }
+
+    public List<OrderItemDTO> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItemDTO> items) {
+        this.items = items != null ? items : new ArrayList<>();
     }
 }

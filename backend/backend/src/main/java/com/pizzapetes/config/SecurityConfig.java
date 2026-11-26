@@ -77,6 +77,36 @@ public class SecurityConfig {
                         .requestMatchers("/api/pizzas/**")
                         .hasRole("ADMIN")
 
+                        // Consultation publique des tailles
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/sizes/available"
+                        ).permitAll()
+
+                        // Gestion des tailles : administrateur
+                        .requestMatchers("/api/sizes/**")
+                        .hasRole("ADMIN")
+
+                        // Consultation publique des pâtes
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/doughs/available"
+                        ).permitAll()
+
+                        // Gestion des pâtes : administrateur
+                        .requestMatchers("/api/doughs/**")
+                        .hasRole("ADMIN")
+
+                        // Consultation publique des garnitures
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/toppings/available"
+                        ).permitAll()
+
+                        // Gestion des garnitures : administrateur
+                        .requestMatchers("/api/toppings/**")
+                        .hasRole("ADMIN")
+
                         // Consultation du profil personnel
                         .requestMatchers(
                                 HttpMethod.GET,
