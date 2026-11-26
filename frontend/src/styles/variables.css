@@ -1,0 +1,116 @@
+
+:root {
+  /* =========================
+     COULEURS PRINCIPALES
+  ========================= */
+
+  --color-primary: #d94325;
+  --color-primary-dark: #b8321b;
+  --color-primary-light: #fff0e9;
+
+  /* =========================
+     COULEURS SECONDAIRES
+  ========================= */
+
+  --color-dark: #211c19;
+  --color-dark-light: #39312c;
+  --color-background: #fffaf3;
+  --color-white: #ffffff;
+
+  --color-cream: #f8efe3;
+  --color-beige: #eadbc8;
+  --color-gold: #d5a253;
+
+  /* =========================
+     COULEURS DU TEXTE
+  ========================= */
+
+  --color-text: #29231f;
+  --color-text-light: #77706a;
+  --color-text-muted: #a49a91;
+
+  /* =========================
+     COULEURS FONCTIONNELLES
+  ========================= */
+
+  --color-success: #238636;
+  --color-success-light: #e8f5e9;
+
+  --color-danger: #dc3545;
+  --color-danger-light: #fdecee;
+
+  --color-warning: #d99a32;
+  --color-warning-light: #fff5df;
+
+  --color-info: #2474c6;
+  --color-info-light: #e8f2ff;
+
+  /* =========================
+     BORDURES ET OMBRES
+  ========================= */
+
+  --color-border: #eadfd3;
+
+  --shadow-sm: 0 3px 10px rgba(48, 31, 20, 0.05);
+  --shadow-md: 0 8px 25px rgba(48, 31, 20, 0.09);
+  --shadow-lg: 0 18px 45px rgba(48, 31, 20, 0.13);
+
+  /* =========================
+     TYPOGRAPHIE
+  ========================= */
+
+  --font-primary: "Poppins", sans-serif;
+  --font-secondary: "Playfair Display", serif;
+
+  /* =========================
+     TAILLES DE TEXTE
+  ========================= */
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+
+  /* =========================
+     ESPACEMENTS
+  ========================= */
+
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+
+  /* =========================
+     BORDURES ARRONDIES
+  ========================= */
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* =========================
+     DIMENSIONS
+  ========================= */
+
+  --container-width: 1200px;
+  --navbar-height: 80px;
+  --sidebar-width: 260px;
+
+  /* =========================
+     TRANSITIONS
+  ========================= */
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+}

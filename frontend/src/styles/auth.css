@@ -1,0 +1,221 @@
+
+/* =========================
+   AUTH PAGE
+========================= */
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--color-background);
+}
+
+/* =========================
+   IMAGE / PANEL
+========================= */
+
+.auth-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100vh;
+  padding: 60px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.1),
+      rgba(0, 0, 0, 0.8)
+    ),
+    url("/images/backgrounds/pizza-auth.jpg")
+      center / cover no-repeat,
+    var(--color-dark);
+  color: var(--color-white);
+}
+
+.auth-visual-content {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+}
+
+.auth-visual h1 {
+  margin: 20px 0;
+  font-family: var(--font-secondary);
+  font-size: clamp(38px, 5vw, 65px);
+  line-height: 1.1;
+}
+
+.auth-visual h1 span {
+  color: var(--color-primary);
+}
+
+.auth-visual p {
+  max-width: 430px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.8;
+}
+
+.auth-logo {
+  position: absolute;
+  top: 40px;
+  left: 50px;
+  z-index: 2;
+}
+
+.auth-logo img {
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* =========================
+   FORM CONTAINER
+========================= */
+
+.auth-form-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 50px 35px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-white);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-card-header {
+  margin-bottom: 30px;
+}
+
+.auth-card-header h1 {
+  margin: 14px 0 10px;
+  font-size: 36px;
+  color: var(--color-dark);
+}
+
+.auth-card-header h1 span {
+  color: var(--color-primary);
+}
+
+.auth-card-header p {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.auth-card .custom-button {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 50px;
+}
+
+.auth-switch {
+  margin-top: 25px;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+}
+
+.auth-switch a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   SEPARATOR
+========================= */
+
+.auth-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 25px 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.auth-separator::before,
+.auth-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* =========================
+   RETOUR ACCUEIL
+========================= */
+
+.auth-back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 25px;
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  transition: var(--transition-fast);
+}
+
+.auth-back-home:hover {
+  color: var(--color-primary);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 950px) {
+  .auth-page {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+
+  .auth-visual {
+    padding: 35px;
+  }
+
+  .auth-card {
+    padding: 32px;
+  }
+}
+
+@media (max-width: 700px) {
+  .auth-page {
+    display: block;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-form-container {
+    min-height: 100vh;
+    padding: 30px 18px;
+  }
+
+  .auth-card {
+    max-width: 480px;
+    padding: 30px 22px;
+  }
+
+  .auth-card-header h1 {
+    font-size: 30px;
+  }
+}
